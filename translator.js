@@ -9,7 +9,7 @@ import { createEmptyStructure } from "./utils.js"; // For fallback on errors
 let aiClientInstance; // Stores the initialized client instance
 let modelNameToUse; // Stores the model name used during initialization
 const BATCH_SIZE = 30; // How many strings to translate per API call
-
+let apiCallCounter = 0;
 // Regular expression to find common placeholder patterns
 const PLACEHOLDER_REGEX = /(\{\{\s*[\w.]+\s*\}\}|{\s*[\w.]+\s*}|%[sd]|\%\{[\w.]+\}|:\w+)/g;
 
@@ -113,6 +113,7 @@ JSON Array Output:`;
 
     try {
         await new Promise(resolve => setTimeout(resolve, 500));
+        apiCallCounter++
         // Use the exact API call structure: ai.models.generateContent({...})
         const response = await aiClientInstance.models.generateContent({ model: modelNameToUse, config, contents });
         // Use the exact response handling: response.text
@@ -236,7 +237,7 @@ export async function translateJsonFileContent(sourceJson, sourceLangCode, targe
     const targetLangName = iso6391.getName(targetLangCode) || targetLangCode;
 
     // Prompt asking for JSON translation, including placeholder instruction
-    const promptText = `Translate the text values within the following JSON object from ${sourceLangName} to ${targetLangName}.
+    const promptText = `Translate the text values within the following JSON object from ${sourceLangName} to ${targetLangName}.Dont forget the plurals to handle and to make them make sense.
 IMPORTANT INSTRUCTIONS:
 1. Preserve the exact JSON structure (all keys, nesting, arrays, etc.).
 2. Translate only the user-facing string values. Do not translate keys or non-string values.
@@ -256,6 +257,7 @@ Translated JSON object only:`;
     try {
         console.log(`    Sending JSON structure for translation (${sourceLangCode} -> ${targetLangCode})...`);
         await new Promise(resolve => setTimeout(resolve, 600)); // Delay
+        apiCallCounter++
 
         // Use the exact API call syntax: ai.models.generateContent({...})
         const response = await aiClientInstance.models.generateContent({ model: modelNameToUse, config, contents });
@@ -326,4 +328,9 @@ function validateStructurePlaceholders(sourceNode, translatedNode, path = 'root'
         // Compare placeholders for this string node
         comparePlaceholders(sourceNode, translatedNode, path);
     }
+}
+
+
+export function getApiCallCount() {
+    return apiCallCounter;
 }

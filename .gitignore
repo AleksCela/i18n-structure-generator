@@ -69,3 +69,5 @@ Thumbs.db
 *.bak
 
 node_modules/
+
+.i18n-generatorrc.json
