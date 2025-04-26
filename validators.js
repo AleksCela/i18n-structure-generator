@@ -1,6 +1,7 @@
 // validators.js
-import fs from 'fs/promises';
-import path from 'path';
+// NOTE: fs and path are no longer needed here unless added back for other validations
+// import fs from 'fs/promises';
+// import path from 'path';
 import iso6391 from 'iso-639-1';
 
 /**
@@ -46,34 +47,4 @@ export function validateTargetLangs(input) {
     return true;
 }
 
-/**
- * Validates the config file path input. Checks existence and read access.
- * @param {string} input - User input path.
- * @returns {Promise<string|boolean>} - Error message string or true if valid.
- */
-export async function validateConfigFile(input) {
-    const trimmedInput = input.trim();
-    if (!trimmedInput) return 'Config file path cannot be empty.';
-    try {
-        const configPath = path.resolve(process.cwd(), trimmedInput);
-        // Check if path exists and we have read access
-        await fs.access(configPath, fs.constants.R_OK);
-        // Check if it's a file, not a directory
-        const stats = await fs.stat(configPath);
-        if (!stats.isFile()) {
-            return `Path exists but is not a file: ${trimmedInput}`;
-        }
-        return true; // Path is valid, readable, and a file
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            // File not found
-            return `Cannot find file: ${trimmedInput}. Please check the path.`;
-        } else if (error.code === 'EACCES') {
-            // Permission denied
-            return `Permission denied to read file: ${trimmedInput}.`;
-        }
-        // Log unexpected errors for debugging, but show generic message
-        console.error("Unexpected config file validation error:", error);
-        return `Cannot access file: ${trimmedInput}. Please check the path and permissions.`;
-    }
-}
+// validateConfigFile function removed
