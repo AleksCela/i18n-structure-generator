@@ -59,33 +59,33 @@ export function normalizeImportPath(filePath) {
 
 /**
  * Recursively synchronizes the structure of the targetNode to match the sourceNode.
- * - Adds missing keys from sourceNode to targetNode (using createEmptyStructure for values).
- * - Removes keys from targetNode that are no longer in sourceNode.
+ * - Adds missing keys/elements using createEmptyStructure.
+ * - Removes keys/elements from targetNode that are no longer in sourceNode.
  * - If data types for a key mismatch, replaces the target branch with createEmptyStructure(sourceNode).
  * - Keeps existing primitive values in targetNode if the key/structure matches.
+ * - Returns information about structural changes made.
+ * (This version does NOT handle translation, only structure).
  *
  * @param {any} sourceNode - The corresponding node from the source JSON.
  * @param {any} targetNode - The corresponding node from the target JSON.
  * @param {string} path - Current path for logging (e.g., 'root.key1.list[0]')
- * @returns {{ updatedNode: any, changesMade: boolean }} - The synchronized target node and a flag indicating if changes occurred.
+ * @returns {{ updatedNode: any, changesMade: boolean }} - The synchronized target node and a flag.
  */
 export function syncStructure(sourceNode, targetNode, path = 'root') {
     let changesMade = false;
 
-    // --- Type Mismatch Handling ---
     const sourceType = Array.isArray(sourceNode) ? 'array' : (sourceNode === null ? 'null' : typeof sourceNode);
     const targetType = Array.isArray(targetNode) ? 'array' : (targetNode === null ? 'null' : typeof targetNode);
 
+    // --- Type Mismatch Handling ---
     if (sourceType !== targetType) {
-        // Treat null like any other type mismatch for replacement
         const isMajorMismatch = (sourceType === 'object' || sourceType === 'array' || targetType === 'object' || targetType === 'array');
-
         if (isMajorMismatch) {
-            console.warn(`    ⚠️ Structural mismatch at '${path}'. Type changed from '${targetType}' to '${sourceType}'. Replacing target branch.`);
+            console.warn(`    ⚠️ Structural mismatch at '${path}'. Type changed from '${targetType}' to '${sourceType}'. Replacing target branch with empty structure.`);
+            // Replace with empty structure only
             return { updatedNode: createEmptyStructure(sourceNode), changesMade: true };
         }
-        // Allow simple primitive type changes (e.g., string <-> number) without replacing node
-        // This keeps existing target values for simple type changes.
+        // Keep target primitive if only primitive types changed (e.g., string -> number)
         return { updatedNode: targetNode, changesMade: false };
     }
 
@@ -104,13 +104,13 @@ export function syncStructure(sourceNode, targetNode, path = 'root') {
 
             if (i < sourceLength && i < targetLength) {
                 // Element exists in both: recurse
-                const result = syncStructure(sourceElement, targetElement, currentPath);
+                const result = syncStructure(sourceElement, targetElement, currentPath); // Recursive call
                 newTargetArray.push(result.updatedNode);
                 if (result.changesMade) arrayChanges = true;
             } else if (i < sourceLength) {
-                // Element only in source (added): add empty structure to target
+                // Element only in source (added): add empty structure
                 console.log(`    ➕ Added structure at '${currentPath}'`);
-                newTargetArray.push(createEmptyStructure(sourceElement));
+                newTargetArray.push(createEmptyStructure(sourceElement)); // Just empty structure
                 arrayChanges = true;
             } else if (i < targetLength) {
                 // Element only in target (deleted from source): log removal
@@ -119,9 +119,8 @@ export function syncStructure(sourceNode, targetNode, path = 'root') {
                 arrayChanges = true;
             }
         }
-        changesMade = arrayChanges; // True if elements added/removed or nested changes occurred
+        changesMade = arrayChanges;
         return { updatedNode: newTargetArray, changesMade };
-
     }
     // --- Object Synchronization ---
     else if (sourceType === 'object') {
@@ -134,28 +133,31 @@ export function syncStructure(sourceNode, targetNode, path = 'root') {
                 const currentPath = `${path}.${key}`;
                 if (Object.prototype.hasOwnProperty.call(newTargetObject, key)) {
                     // Key exists in both: recurse
-                    const result = syncStructure(sourceNode[key], newTargetObject[key], currentPath);
+                    const result = syncStructure(sourceNode[key], newTargetObject[key], currentPath); // Recursive call
                     if (result.changesMade) {
                         newTargetObject[key] = result.updatedNode;
                         objectChanges = true;
                     }
                 } else {
-                    // Key only in source (added): add empty structure to target
+                    // Key only in source (added): add empty structure
                     console.log(`    ➕ Added key: '${currentPath}'`);
-                    newTargetObject[key] = createEmptyStructure(sourceNode[key]);
+                    newTargetObject[key] = createEmptyStructure(sourceNode[key]); // Just empty structure
                     objectChanges = true;
+                    // NOTE: If needed later for targeted translation on sync,
+                    // could collect info about added keys here:
+                    // addedNodesInfo.push({ path: currentPath, sourceValue: sourceNode[key] });
                 }
             }
         }
 
-        // Check for deleted keys (iterate target's original keys)
-        for (const key in targetNode) { // Iterate original target keys
+        // Check for deleted keys (iterate target's original keys to compare against source)
+        for (const key in targetNode) {
             if (Object.prototype.hasOwnProperty.call(targetNode, key)) {
                 const currentPath = `${path}.${key}`;
                 // If key existed in original target but not in source, delete from new target
                 if (!Object.prototype.hasOwnProperty.call(sourceNode, key)) {
                     console.log(`    ➖ Removed key: '${currentPath}'`);
-                    delete newTargetObject[key];
+                    delete newTargetObject[key]; // Delete from the copy
                     objectChanges = true;
                 }
             }
@@ -170,7 +172,7 @@ export function syncStructure(sourceNode, targetNode, path = 'root') {
     }
 }
 
-// Simple error class for specific errors if needed (optional)
+// Simple error class (optional, can be removed if not used)
 export class AppError extends Error {
     constructor(message, code) {
         super(message);
