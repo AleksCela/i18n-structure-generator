@@ -1,25 +1,16 @@
 #!/usr/bin/env node
 
-import fs from 'fs/promises'; // Keep fs import needed for directory checks
+import fs from 'fs/promises';
 import path from 'path';
 import inquirer from 'inquirer';
-// Import necessary functions from modules
-import { getBaseInputs } from './prompts.js'; // Removed unused prompt imports
+import { getBaseInputs } from './prompts.js';
 import { getSourceFiles, processLanguage } from './fileOperations.js';
-// Removed astUpdater imports
 import { runSync } from './syncOperations.js';
 import { normalizeImportPath, generateImportName } from './utils.js';
-// Import translator initialization function only
 import { initializeTranslator } from './translator.js';
 
-/**
- * Executes the 'generate' command logic. Creates/overwrites target files
- * with empty structure or translated content based on source.
- *
- * @param {object} config - Base configuration object from prompts.
- * @param {boolean} enableTranslation - Whether translation was successfully initialized.
- */
-async function runGenerate(config, enableTranslation) { // Removed config file params
+
+async function runGenerate(config, enableTranslation) {
     const { baseDir, sourceLang, targetLangsString: targetLangs } = config;
     const absoluteBaseDir = path.resolve(process.cwd(), baseDir);
     const sourceDir = path.join(absoluteBaseDir, sourceLang);
@@ -28,14 +19,12 @@ async function runGenerate(config, enableTranslation) { // Removed config file p
     console.log(`\nRunning Structure ${mode}`);
     console.log(`Source directory: ${sourceDir} (using language code: ${sourceLang})`);
     console.log(`Target languages: ${targetLangs.join(', ')}`);
-    // Removed logging about config file updates
 
     if (targetLangs.includes(sourceLang)) {
         console.warn(`\n⚠️ Warning: Source language '${sourceLang}' is also listed as a target language.`);
         console.warn(`   Files in '${sourceDir}' may be overwritten during structure generation.`);
     }
 
-    // --- Get Source Files ---
     let sourceFiles;
     let sourceFilesFound = false;
     try {
@@ -57,7 +46,6 @@ async function runGenerate(config, enableTranslation) { // Removed config file p
         }
     }
 
-    // --- Process Target Languages ---
     let filesProcessedTotal = 0;
     const languagesFullyProcessed = [];
 
@@ -93,7 +81,7 @@ async function runGenerate(config, enableTranslation) { // Removed config file p
             } catch (error) {
                 console.error(`\n❌ Unexpected error generating structure for language ${targetLang}: ${error.message}`);
             }
-        } // End language loop
+        }
     } else if (!dirCreationSuccess) {
         console.error("❌ Cannot proceed with file processing due to directory creation errors.");
     }
@@ -108,8 +96,6 @@ async function runGenerate(config, enableTranslation) { // Removed config file p
         console.log(`  Target directories ensured/checked for ${targetLangs.length} languages.`);
     }
 
-    // --- Manual Config Update Guidance ---
-    // Display this if new languages/files were potentially created
     if (languagesFullyProcessed.length > 0 && sourceFilesFound) {
         console.log("\n✨ Manual Action Required ✨");
         console.log("   Remember to manually update your main i18n configuration file (e.g., i18n.js/ts)");
@@ -118,12 +104,9 @@ async function runGenerate(config, enableTranslation) { // Removed config file p
         languagesFullyProcessed.forEach(lang => {
             console.log(`     - Language: ${lang}`);
             if (sourceFiles.length > 0) {
-                const exampleFile = sourceFiles[0]; // Show example for first file
-                // Need configDir to show relative path - how to get it without prompt?
-                // Let's assume config is often in src/ or similar relative to baseDir
-                // This is imperfect guidance without knowing the config file location.
-                const exampleTargetFilePath = path.join(baseDir, lang, exampleFile); // Use relative baseDir
-                const exampleRelativePath = normalizeImportPath(`./${exampleTargetFilePath}`); // Simplistic relative path
+                const exampleFile = sourceFiles[0];
+                const exampleTargetFilePath = path.join(baseDir, lang, exampleFile);
+                const exampleRelativePath = normalizeImportPath(`./${exampleTargetFilePath}`);
                 const importName = generateImportName(lang, exampleFile);
                 const resourceKey = path.basename(exampleFile, '.json');
                 console.log(`       import ${importName} from '${exampleRelativePath}';`);
@@ -134,9 +117,6 @@ async function runGenerate(config, enableTranslation) { // Removed config file p
 }
 
 
-/**
- * Main execution function: determines command, gets inputs, calls appropriate handler.
- */
 async function main() {
     const args = process.argv.slice(2);
     const isSyncCommand = args.includes('sync');
@@ -144,10 +124,8 @@ async function main() {
 
     console.log(`🚀 Starting i18n Structure ${commandName}...`);
 
-    // 1. Get Base Config
     const baseConfig = await getBaseInputs();
 
-    // 2. Ask about Translation
     let translationInitialized = false;
     const { enableTranslation } = await inquirer.prompt([
         {
@@ -182,23 +160,18 @@ async function main() {
         console.log("ℹ️ Translation disabled.");
     }
 
-    // 3. No longer asking about Auto Update or Config File Path
-
-    // 4. Execute Command
     if (isSyncCommand) {
         const absoluteBaseDir = path.resolve(process.cwd(), baseConfig.baseDir);
         await runSync(
             absoluteBaseDir,
             baseConfig.sourceLang,
-            baseConfig.targetLangsString, // Prompt filter created the array
-            translationInitialized // Pass boolean flag
-            // Removed config file params
+            baseConfig.targetLangsString,
+            translationInitialized
         );
     } else {
         await runGenerate(
             baseConfig,
-            translationInitialized // Pass boolean flag
-            // Removed config file params
+            translationInitialized
         );
     }
 
