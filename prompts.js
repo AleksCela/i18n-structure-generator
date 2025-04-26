@@ -1,5 +1,6 @@
 // prompts.js
 import inquirer from 'inquirer';
+// Import needs to be dynamic for ESM in some Node versions if validators isn't explicitly listed in package.json imports, but direct static should work with type:module
 import { validateSourceLang, validateTargetLangs, validateConfigFile } from './validators.js';
 
 /**
@@ -18,14 +19,15 @@ export async function getBaseInputs() {
             type: 'input',
             name: 'sourceLang',
             message: 'Enter the source language code (ISO 639-1, e.g., en, sq):',
-            validate: validateSourceLang,
+            validate: validateSourceLang, // Use imported validator
             filter: input => input.trim().toLowerCase(),
         },
         {
             type: 'input',
             name: 'targetLangsString', // Keep name consistent with index.js usage
             message: 'Enter target language codes (ISO 639-1), comma-separated (e.g., fr, es, sq):',
-            validate: validateTargetLangs,
+            validate: validateTargetLangs, // Use imported validator
+            // Filter transforms the comma-separated string into an array of codes
             filter: input => input.split(',').map(lang => lang.trim().toLowerCase()).filter(Boolean),
         },
     ]);
@@ -58,7 +60,7 @@ export async function getConfigFileInput() {
             type: 'input',
             name: 'configFile',
             message: 'Enter the path to your main i18n configuration file (e.g., ./src/i18n.js):',
-            validate: validateConfigFile,
+            validate: validateConfigFile, // Use imported validator
             filter: input => input.trim(),
         }
     ]);

@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 
-// **** ADD THIS IMPORT ****
-import fs from 'fs/promises';
-// ************************
+import fs from 'fs/promises'; // Ensure fs is imported
 import path from 'path';
 import inquirer from 'inquirer';
 // Import necessary functions from modules
@@ -16,7 +14,7 @@ import { initializeTranslator } from './translator.js';
 
 /**
  * Executes the 'generate' command logic: creates/overwrites target files
- * with empty structure or translated content (using batching) based on source,
+ * with empty structure or translated content (using whole JSON method) based on source,
  * optionally updates config file.
  *
  * @param {object} config - Base configuration object from prompts.
@@ -30,7 +28,7 @@ async function runGenerate(config, enableTranslation, attemptAutoUpdate, absolut
     const absoluteBaseDir = path.resolve(process.cwd(), baseDir);
     const sourceDir = path.join(absoluteBaseDir, sourceLang);
 
-    const mode = enableTranslation ? 'Translation (Whole JSON Mode)' : 'Generation'; // Updated mode text
+    const mode = enableTranslation ? 'Translation (Whole JSON Mode)' : 'Generation';
     console.log(`\nRunning Structure ${mode}`);
     console.log(`Source directory: ${sourceDir} (using language code: ${sourceLang})`);
     console.log(`Target languages: ${targetLangs.join(', ')}`);
@@ -78,13 +76,13 @@ async function runGenerate(config, enableTranslation, attemptAutoUpdate, absolut
     let filesProcessedTotal = 0;
     const languagesFullyProcessed = []; // Track languages where processing completed
 
-    // Ensure target directories exist first - THIS IS WHERE THE ERROR WAS
+    // Ensure target directories exist first
     console.log("Ensuring target directories exist...");
     let dirCreationSuccess = true; // Assume success initially
     for (const targetLang of targetLangs) {
         const targetDir = path.join(absoluteBaseDir, targetLang);
         try {
-            // Use the imported 'fs' module here
+            // Use the imported 'fs' module here - THIS WAS THE FIX
             await fs.mkdir(targetDir, { recursive: true });
         } catch (error) {
             console.error(`❌ Error creating directory ${targetDir}: ${error.message}`);
@@ -92,7 +90,7 @@ async function runGenerate(config, enableTranslation, attemptAutoUpdate, absolut
         }
     }
 
-    // Only proceed with file processing if directories were created and source files exist
+    // Only proceed with file processing if directories seem okay and source files exist
     if (dirCreationSuccess && sourceFilesFound) {
         console.log("Processing target language files...");
         for (const targetLang of targetLangs) {
@@ -206,15 +204,15 @@ async function main() {
             {
                 type: 'password',
                 name: 'googleApiKey',
-                message: 'Enter your Google AI API Key:',
+                message: 'Enter your Google AI API Key (e.g., GEMINI_API_KEY):', // Adjusted message slightly
                 mask: '*',
                 validate: input => input && input.trim().length > 0 || 'API Key cannot be empty.',
             }
         ]);
         const apiKey = googleApiKey.trim();
         try {
-            // Attempt to initialize the translator module
-            initializeTranslator(apiKey); // Initialize with default model
+            // Attempt to initialize the translator module using user's syntax via translator.js
+            initializeTranslator(apiKey); // Initialize with default model from user example
             translationInitialized = true; // Mark as successful
             console.log("✅ Translator initialized successfully.");
         } catch (initError) {

@@ -102,7 +102,7 @@ export async function processLanguage(targetLang, targetDir, sourceDir, sourceFi
                 continue; // Move to the next source file
             }
 
-            // --- Determine Target Content (Translate or Create Empty) ---
+            // --- Determine Target Content (Translate Whole JSON or Create Empty) ---
             let targetJson;
             if (enableTranslation) {
                 // Call the translator function which handles the whole JSON object
@@ -112,9 +112,9 @@ export async function processLanguage(targetLang, targetDir, sourceDir, sourceFi
                 // If translation is disabled, create the empty structure
                 targetJson = createEmptyStructure(sourceJson);
             }
-            // ----------------------------------------------------------
+            // -----------------------------------------------------------------
 
-            // Write the resulting target JSON (translated or empty) to the target file
+            // Write the resulting target JSON (translated or empty structure) to the target file
             // Use indentation (null, 2) for pretty printing
             await fs.writeFile(targetFilePath, JSON.stringify(targetJson, null, 2), 'utf-8');
             console.log(`    ✅ Wrote file: ${targetFilePath}`);
