@@ -33,31 +33,6 @@ export function createEmptyStructure(value) {
 }
 
 /**
- * Generates a conventional variable name for imports.
- * Example: ('fr', 'hero.json') => 'frHero'
- * @param {string} lang Language code
- * @param {string} filename Filename
- * @returns {string} Import variable name
- */
-export function generateImportName(lang, filename) {
-    const name = path.basename(filename, '.json');
-    // Ensure the name starts with a letter, prefix if needed
-    const baseName = /^[a-zA-Z]/.test(name) ? name : `_${name}`;
-    // Capitalize the first letter of the base name
-    const capitalizedBaseName = baseName.charAt(0).toUpperCase() + baseName.slice(1);
-    return `${lang}${capitalizedBaseName}`;
-}
-
-/**
- * Ensures path uses forward slashes, necessary for JS imports
- * @param {string} filePath
- * @returns {string} Path with forward slashes
- */
-export function normalizeImportPath(filePath) {
-    return filePath.replace(/\\/g, '/');
-}
-
-/**
  * Recursively synchronizes the structure of the targetNode to match the sourceNode.
  * - Adds missing keys/elements using createEmptyStructure.
  * - Removes keys/elements from targetNode that are no longer in sourceNode.
@@ -245,3 +220,5 @@ export class AppError extends Error {
         this.code = code;
     }
 }
+
+

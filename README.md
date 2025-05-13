@@ -42,9 +42,6 @@ This CLI automates and enhances your i18n workflow:
   - Supports batching and placeholder validation (e.g. `{{var}}`, `%s`).
   - Uses `responseMimeType: 'application/json'` for structured translation responses.
 
-- **Configurable Concurrency**
-  - Manage parallel API calls to avoid rate limits.
-
 - **Developer-Friendly**
   - Works via `npx` or a globally installed command.
   - Secure key handling via environment variables.
@@ -57,7 +54,6 @@ This CLI automates and enhances your i18n workflow:
 - **Node.js** (v18+ recommended)
 - **npm**
 - (For AI Translation) Google Gemini API Key with billing enabled
-- (For AI Translation) Installed dependency: `@google/genai`
 
 ---
 
@@ -72,15 +68,8 @@ npm install
 
 ### 2. Run the Tool
 
-#### Method A: Run with `npx` (Recommended)
 
-```bash
-# From the tool’s directory
-npx .             # defaults to 'generate'
-npx . sync        # to run sync
-```
-
-#### Method B: Global Command with `npm link`
+Global Command with `npm link`
 
 ```bash
 npm link
@@ -102,8 +91,7 @@ Create this file in your **project root** (not inside the tool folder):
   "translation": {
     "enable": true,
     "apiKeyEnvVar": "GEMINI_API_KEY",
-    "modelName": "gemini-1.5-flash",
-    "concurrency": 3
+    "modelName": "gemini-1.5-flash"
   }
 }
 ```
@@ -116,7 +104,6 @@ Create this file in your **project root** (not inside the tool folder):
 - `translation.enable` (bool): Enable AI translation.
 - `translation.apiKeyEnvVar` (string): ENV variable storing Gemini API key.
 - `translation.modelName` (string): Model to use (default: `"gemini-1.5-flash"`).
-- `translation.concurrency` (number): Max concurrent API calls.
 
 ---
 

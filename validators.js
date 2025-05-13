@@ -1,7 +1,3 @@
-// validators.js
-// NOTE: fs and path are no longer needed here unless added back for other validations
-// import fs from 'fs/promises';
-// import path from 'path';
 import iso6391 from 'iso-639-1';
 
 /**
@@ -10,7 +6,7 @@ import iso6391 from 'iso-639-1';
  * @returns {string|boolean} - Error message string or true if valid.
  */
 export function validateSourceLang(input) {
-    const code = input.trim().toLowerCase(); // Standardize to lowercase
+    const code = input.trim().toLowerCase();
     if (!code) return 'Source language cannot be empty.';
     if (!iso6391.validate(code)) {
         const langName = iso6391.getName(code); // Check if it's known by another code type
@@ -29,15 +25,14 @@ export function validateSourceLang(input) {
  */
 export function validateTargetLangs(input) {
     const codes = input.split(',')
-        .map(lang => lang.trim().toLowerCase()) // Standardize
-        .filter(Boolean); // Remove empty strings
+        .map(lang => lang.trim().toLowerCase())
+        .filter(Boolean);
 
     if (codes.length === 0) return 'Target languages cannot be empty.';
 
     const invalidCodes = codes.filter(code => !iso6391.validate(code));
 
     if (invalidCodes.length > 0) {
-        // Check if they are known by other names/codes
         const suggestions = invalidCodes.map(code => {
             const name = iso6391.getName(code);
             return name ? `${code} (Maybe use 2-letter code? Known as: ${name})` : code;
@@ -46,5 +41,3 @@ export function validateTargetLangs(input) {
     }
     return true;
 }
-
-// validateConfigFile function removed
